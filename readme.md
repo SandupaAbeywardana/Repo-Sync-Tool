@@ -2,8 +2,8 @@
 
 Two complementary tools for syncing changes across multiple Git repositories. These scripts are designed for **multi-portal/multi-repo projects** where changes often need to be propagated across similar but not identical repos.
 
-* **`sync-changes.sh`** → Patch-based syncing (uses Git diffs/commits). Best when changes are **logical edits** that can be merged.
-* **`sync-files.sh`** → Whole-file syncing (copies changed files entirely). Best when you need **exact file replacement**.
+- **`sync-changes.sh`** → Patch-based syncing (uses Git diffs/commits). Best when changes are **logical edits** that can be merged.
+- **`sync-files.sh`** → Whole-file syncing (copies changed files entirely). Best when you need **exact file replacement**.
 
 Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
@@ -11,15 +11,15 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
 ## ✨ Shared Features
 
-* ✅ Interactive menus for source & target selection
-* ✅ Supports **selecting all repos except source**
-* ✅ **Dry-Run previews** (see what will happen before changes)
-* ✅ **Session-based backups** stored in `data/sessions/<timestamp>/`
-* ✅ **Full session revert** (reverts all repos to their pre-sync state)
-* ✅ **Color-coded output** (green = success, yellow = skipped, red = failed)
-* ✅ **Spinner/progress feedback** for long runs
-* ✅ Detailed **logs** saved in `data/`
-* ✅ Safe for production repos (backups ensure rollback)
+- ✅ Interactive menus for source & target selection
+- ✅ Supports **selecting all repos except source**
+- ✅ **Dry-Run previews** (see what will happen before changes)
+- ✅ **Session-based backups** stored in `data/sessions/<timestamp>/`
+- ✅ **Full session revert** (reverts all repos to their pre-sync state)
+- ✅ **Color-coded output** (green = success, yellow = skipped, red = failed)
+- ✅ **Spinner/progress feedback** for long runs
+- ✅ Detailed **logs** saved in `data/`
+- ✅ Safe for production repos (backups ensure rollback)
 
 ---
 
@@ -54,16 +54,16 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
 ### 📌 When to Use
 
-* When you want to **sync code changes as diffs/commits** rather than replacing entire files.
-* Useful for **merging logical changes** while preserving repo-specific modifications.
-* Works best if repos share common history or have minimal divergence.
+- When you want to **sync code changes as diffs/commits** rather than replacing entire files.
+- Useful for **merging logical changes** while preserving repo-specific modifications.
+- Works best if repos share common history or have minimal divergence.
 
 ### 🔧 Options
 
-* **Uncommitted changes** (working directory diff)
-* **Last commit (HEAD)**
-* **Commit range** (e.g. `abc123..def456`)
-* **Select specific commits** (choose interactively from history)
+- **Uncommitted changes** (working directory diff)
+- **Last commit (HEAD)**
+- **Commit range** (e.g. `abc123..def456`)
+- **Select specific commits** (choose interactively from history)
 
 ### 🛠 Workflow
 
@@ -76,13 +76,14 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
    ```
    data/sessions/<timestamp>/<repo>.pre.patch
    ```
+
 6. To revert, select session → all repos restored to previous state.
 
 ### 🔐 Safety Features
 
-* Uses `git apply` with **3-way merges** and whitespace tolerance for uncommitted patches.
-* Uses `git am -3 --keep-cr` for commit-based patches (handles CRLF issues).
-* Session-based revert ensures you can undo everything in one step.
+- Uses `git apply` with **3-way merges** and whitespace tolerance for uncommitted patches.
+- Uses `git am -3 --keep-cr` for commit-based patches (handles CRLF issues).
+- Session-based revert ensures you can undo everything in one step.
 
 ---
 
@@ -90,17 +91,17 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
 ### 📌 When to Use
 
-* When you want to **copy entire files** instead of diffs.
-* Useful when files diverged too much for patches to apply cleanly.
-* Best for **large rewrites, configs, or generated code** where full replacement is safer.
+- When you want to **copy entire files** instead of diffs.
+- Useful when files diverged too much for patches to apply cleanly.
+- Best for **large rewrites, configs, or generated code** where full replacement is safer.
 
 ### 🔧 Options
 
-* **Changed since last commit** (default)
-* **Changed in a specific commit**
-* **Changed in a commit range**
-* **Interactive selection** (pick files manually from detected changes)
-* **Include staged / unstaged / both**
+- **Changed since last commit** (default)
+- **Changed in a specific commit**
+- **Changed in a commit range**
+- **Interactive selection** (pick files manually from detected changes)
+- **Include staged / unstaged / both**
 
 ### 🛠 Workflow
 
@@ -112,29 +113,32 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
    ```
    data/sessions/<timestamp>/<repo>.<path.with.dots>.file-backup
    ```
+
 5. Session revert restores all copied files.
 
 ### 🔐 Extra Safety
 
-* Confirmation for **critical files** (like `.env`, configs, providers).
-* Skips or confirms on **binary files**.
-* Warns if **target repo already modified the file**.
-* Creates missing directories only after confirmation.
-* Excludes folders by default (`node_modules/`, `vendor/`, `storage/`, `.git/`, `data/`).
+- Confirmation for **critical files** (like `.env`, configs, providers).
+- Skips or confirms on **binary files**.
+- Warns if **target repo already modified the file**.
+- Creates missing directories only after confirmation.
+- Excludes folders by default (`node_modules/`, `vendor/`, `storage/`, `.git/`, `data/`).
 
 ---
 
 ## 📂 Data Storage
 
-* **Logs**
+- **Logs**
 
-  * `data/sync-changes.log`
-  * `data/sync-files.log`
-* **Backups**
+  - `data/sync-changes.log`
+  - `data/sync-files.log`
 
-  * Patch backups (for `sync-changes.sh`): `data/sessions/<timestamp>/<repo>.pre.patch`
-  * File backups (for `sync-files.sh`): `data/sessions/<timestamp>/<repo>.<path.with.dots>.file-backup`
-* **Temp patches** (for patch sync): `data/tmp-<timestamp>.patch`
+- **Backups**
+
+  - Patch backups (for `sync-changes.sh`): `data/sessions/<timestamp>/<repo>.pre.patch`
+  - File backups (for `sync-files.sh`): `data/sessions/<timestamp>/<repo>.<path.with.dots>.file-backup`
+
+- **Temp patches** (for patch sync): `data/tmp-<timestamp>.patch`
 
 ---
 
@@ -170,13 +174,13 @@ Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
 ## ⚠️ Best Practices
 
-* Always run with **Dry-Run** first.
-* Revert entire sessions if something goes wrong — don’t cherry-pick.
-* Run only in clean working directories (commit/stash local changes first).
-* For **binary files**, prefer `sync-files.sh` (patches often fail).
-* For **source code changes**, prefer `sync-changes.sh` (keeps Git history clean).
-* Review `data/sync-*.log` if errors occur.
-* Regularly clean up old sessions if disk space is a concern.
+- Always run with **Dry-Run** first.
+- Revert entire sessions if something goes wrong — don’t cherry-pick.
+- Run only in clean working directories (commit/stash local changes first).
+- For **binary files**, prefer `sync-files.sh` (patches often fail).
+- For **source code changes**, prefer `sync-changes.sh` (keeps Git history clean).
+- Review `data/sync-*.log` if errors occur.
+- Regularly clean up old sessions if disk space is a concern.
 
 ---
 
