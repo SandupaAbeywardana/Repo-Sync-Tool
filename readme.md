@@ -1,159 +1,182 @@
-# 🔄 Repo Sync Tool
+# 🔄 Repo Sync Tools
 
-A powerful shell script to **sync changes across multiple Git repositories** with maximum safety and flexibility.
+Two complementary tools for syncing changes across multiple Git repositories. These scripts are designed for **multi-portal/multi-repo projects** where changes often need to be propagated across similar but not identical repos.
+
+* **`sync-changes.sh`** → Patch-based syncing (uses Git diffs/commits). Best when changes are **logical edits** that can be merged.
+* **`sync-files.sh`** → Whole-file syncing (copies changed files entirely). Best when you need **exact file replacement**.
+
+Both are menu-driven, safe, and store logs & backups in the `data/` folder.
 
 ---
 
-## ✨ Features
+## ✨ Shared Features
 
-- ✅ Menu-driven workflow (**Apply** or **Revert**)
-- ✅ **Dry-Run** mode before applying changes to ensure compatibility
-- ✅ **Timestamped backups** per repo (`repo.sync-backup-YYYYMMDDHHMMSS`)
-- ✅ Multiple rollback points supported
-- ✅ Selective revert menu (choose which repos/backups to undo)
-- ✅ **Color-coded output** for clarity (green = success, red = failure, yellow = warnings)
-- ✅ **Spinner progress** for long-running operations
-- ✅ Detailed **logs** saved for troubleshooting
-- ✅ Works **without touching Git history** (no extra branches created)
-- ✅ Supports syncing **uncommitted changes, last commit, commit ranges, or specific commits**
+* ✅ Interactive menus for source & target selection
+* ✅ Supports **selecting all repos except source**
+* ✅ **Dry-Run previews** (see what will happen before changes)
+* ✅ **Session-based backups** stored in `data/sessions/<timestamp>/`
+* ✅ **Full session revert** (reverts all repos to their pre-sync state)
+* ✅ **Color-coded output** (green = success, yellow = skipped, red = failed)
+* ✅ **Spinner/progress feedback** for long runs
+* ✅ Detailed **logs** saved in `data/`
+* ✅ Safe for production repos (backups ensure rollback)
 
 ---
 
 ## ⚙️ Setup
 
-1. Save the script as `sync-changes.sh` in the parent folder containing all repos:
+1. Place the scripts in the parent folder containing all repos:
 
    ```
    ├── sync-changes.sh
+   ├── sync-files.sh
    ├── repo1/
    ├── repo2/
    ├── repo3/
    ```
 
-2. Make it executable:
+2. Make them executable:
 
    ```bash
-   chmod +x sync-changes.sh
+   chmod +x sync-changes.sh sync-files.sh
+   ```
+
+3. Run via **Git Bash** or **WSL** on Windows:
+
+   ```bash
+   ./sync-changes.sh
+   ./sync-files.sh
    ```
 
 ---
 
-## 🚀 Usage
+## 🚀 Tool 1: `sync-changes.sh` (Patch-based)
 
-### 1. Run the tool
+### 📌 When to Use
 
-```bash
-./sync-changes.sh
-```
+* When you want to **sync code changes as diffs/commits** rather than replacing entire files.
+* Useful for **merging logical changes** while preserving repo-specific modifications.
+* Works best if repos share common history or have minimal divergence.
 
-You’ll see a **main menu**:
+### 🔧 Options
 
-```
-Main Menu:
-[1] Apply changes
-[2] Revert changes (from backups)
-```
+* **Uncommitted changes** (working directory diff)
+* **Last commit (HEAD)**
+* **Commit range** (e.g. `abc123..def456`)
+* **Select specific commits** (choose interactively from history)
 
----
+### 🛠 Workflow
 
-### 2. Apply changes
+1. Select source repo.
+2. Choose change type (diff/commit/range).
+3. Select target repos.
+4. Script generates a patch → runs Dry-Run → Apply.
+5. Each target repo gets a **pre-change backup patch** stored in:
 
-1. Choose **Apply changes**.
-2. Select the **source repo** (where your changes are).
-3. Choose what to copy:
+   ```
+   data/sessions/<timestamp>/<repo>.pre.patch
+   ```
+6. To revert, select session → all repos restored to previous state.
 
-   - `[1]` Uncommitted changes (working directory diff)
-   - `[2]` Last commit (HEAD)
-   - `[3]` Commit range (e.g., `abc123..def456`)
-   - `[4]` Select specific commits (from recent history)
+### 🔐 Safety Features
 
-4. Select **target repos** (specific repos or all except source).
-5. The script runs a **Dry-Run check** in each target repo to ensure compatibility.
-6. If all checks pass, confirm to **apply permanently**.
-
-   - Each repo gets its own backup file, e.g.:
-
-     ```
-     repo1.sync-backup-20250826123015
-     repo2.sync-backup-20250826123015
-     ```
+* Uses `git apply` with **3-way merges** and whitespace tolerance for uncommitted patches.
+* Uses `git am -3 --keep-cr` for commit-based patches (handles CRLF issues).
+* Session-based revert ensures you can undo everything in one step.
 
 ---
 
-### 3. Revert changes
+## 🚀 Tool 2: `sync-files.sh` (Whole-file)
 
-1. Choose **Revert changes** from the main menu.
-2. The script will list all available backup files (`.sync-backup-*`).
-3. You can:
+### 📌 When to Use
 
-   - Select specific repos/backups to revert
-   - Or choose `all` to revert everything at once
+* When you want to **copy entire files** instead of diffs.
+* Useful when files diverged too much for patches to apply cleanly.
+* Best for **large rewrites, configs, or generated code** where full replacement is safer.
 
-4. The script restores each repo back to its pre-sync state using reverse patches (`git apply -R`).
+### 🔧 Options
 
-You can also **revert immediately after applying** (script will ask after sync).
+* **Changed since last commit** (default)
+* **Changed in a specific commit**
+* **Changed in a commit range**
+* **Interactive selection** (pick files manually from detected changes)
+* **Include staged / unstaged / both**
 
----
+### 🛠 Workflow
 
-## 📂 Backups
+1. Select source repo.
+2. Choose which changed files to sync.
+3. Dry-Run preview of files → confirm.
+4. Each file is copied to target repos, with **per-file backups** under:
 
-- Backups are automatically created before applying changes.
-- Saved as timestamped patch files:
+   ```
+   data/sessions/<timestamp>/<repo>.<path.with.dots>.file-backup
+   ```
+5. Session revert restores all copied files.
 
-  ```
-  repo1.sync-backup-20250826124530
-  repo2.sync-backup-20250826124530
-  ```
+### 🔐 Extra Safety
 
-- Each backup is a **diff file** containing the original state.
-- Reverting applies the diff in reverse to restore state.
-- Multiple backups are supported (you can revert to any previous one).
-
----
-
-## 📜 Logs
-
-- A log file is maintained for every run:
-
-  ```
-  sync-changes.log
-  ```
-
-- Contains detailed command outputs, error messages, and conflict details.
-- Use this log for troubleshooting when a patch does not apply cleanly.
+* Confirmation for **critical files** (like `.env`, configs, providers).
+* Skips or confirms on **binary files**.
+* Warns if **target repo already modified the file**.
+* Creates missing directories only after confirmation.
+* Excludes folders by default (`node_modules/`, `vendor/`, `storage/`, `.git/`, `data/`).
 
 ---
 
-## ✅ Example Workflow
+## 📂 Data Storage
+
+* **Logs**
+
+  * `data/sync-changes.log`
+  * `data/sync-files.log`
+* **Backups**
+
+  * Patch backups (for `sync-changes.sh`): `data/sessions/<timestamp>/<repo>.pre.patch`
+  * File backups (for `sync-files.sh`): `data/sessions/<timestamp>/<repo>.<path.with.dots>.file-backup`
+* **Temp patches** (for patch sync): `data/tmp-<timestamp>.patch`
+
+---
+
+## ✅ Example Workflows
+
+### Using `sync-changes.sh`
 
 ```bash
 ./sync-changes.sh
 # → Select Apply changes
 # → Pick source repo: repo1
-# → Choose "Uncommitted changes"
+# → Choose "Last commit"
 # → Select target repos: repo2 repo3
 # → Dry-Run passes
-# → Apply permanently (yes)
-# → Done, backups saved: repo2.sync-backup-..., repo3.sync-backup-...
+# → Apply permanently
+# → Backups stored in data/sessions/<timestamp>/
 ```
 
-To revert later:
+### Using `sync-files.sh`
 
 ```bash
-./sync-changes.sh
-# → Select Revert changes
-# → Choose repo2.sync-backup-...
-# → Repo restored
+./sync-files.sh
+# → Select Copy changed files
+# → Pick source repo: repo1
+# → Choose "Changed since last commit"
+# → Preview file list
+# → Select targets: repo2 repo3
+# → Confirm & apply
+# → Backups stored in data/sessions/<timestamp>/
 ```
 
 ---
 
-## 🔐 Safety & Best Practices
+## ⚠️ Best Practices
 
-- Always review changes with **Dry-Run** before applying.
-- Use **commit ranges** or **specific commits** for precise syncing.
-- Keep backups for rollback — timestamped backups make it easy to undo at any time.
-- If conflicts occur, check `sync-changes.log` for details.
+* Always run with **Dry-Run** first.
+* Revert entire sessions if something goes wrong — don’t cherry-pick.
+* Run only in clean working directories (commit/stash local changes first).
+* For **binary files**, prefer `sync-files.sh` (patches often fail).
+* For **source code changes**, prefer `sync-changes.sh` (keeps Git history clean).
+* Review `data/sync-*.log` if errors occur.
+* Regularly clean up old sessions if disk space is a concern.
 
 ---
 
@@ -165,4 +188,4 @@ Developed and maintained by **CyberMatrix**.
 
 ## 📜 License
 
-This project is released under the **MIT License**.
+Released under the **MIT License**.
